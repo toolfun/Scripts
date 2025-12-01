@@ -1,7 +1,9 @@
 #!/bin/bash
 
-#	
-# URL="https://gist.githubusercontent.com/toolfun/0b7ae31463245380bb83f12360aac81e/raw/nym-web-gateway-setup.sh"	
+#
+# mkdir -p $HOME/scripts/nym-scripts
+# URLGIST="https://gist.githubusercontent.com/toolfun/0b7ae31463245380bb83f12360aac81e/raw/nym-web-gateway-setup.sh"	
+# URLGH="https://raw.githubusercontent.com/toolfun/Scripts/refs/heads/main/Nym/nym-web-gateway-setup.sh"
 # curl --fail -L --progress-bar $URL -o ~/scripts/nym-scripts/nym-web-gateway-setup.sh	
 # chmod +x ~/scripts/nym-scripts/nym-web-gateway-setup.sh
 #
@@ -10,8 +12,8 @@
 # Nym Node - Reverse Proxy & WSS Configuration Script
 # For Ubuntu 22.04/24.04
 # Author: toolfun
-# Version: 1.0.3
-# Date: 2025-01-28
+# Version: 2.0.1
+# Date: 2025-11-30
 ################################################################################
 
 set +e  # Don't exit on errors - we handle them manually
