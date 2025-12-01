@@ -1,10 +1,9 @@
 #!/bin/bash
 
-#
-# mkdir -p $HOME/scripts/nym-scripts
-# URL="https://gist.githubusercontent.com/toolfun/fe137d3d983ebf26b4d603ab71553d6e/raw/nym-node-installer.sh"
-# curl --fail -L --progress-bar $URL -o $HOME/scripts/nym-scripts/nym-node-installer.sh
-# chmod +x $HOME/scripts/nym-scripts/nym-node-installer.sh
+# 
+# mkdir -p $HOME/scripts/nym-scripts URL="https://gist.githubusercontent.com/toolfun/fe137d3d983ebf26b4d603ab71553d6e/raw/nym-node-installer.sh"
+# curl --fail -L --progress-bar $URL -o ~/scripts/nym-scripts/nym-node-installer.sh
+# chmod +x $HOME/scripts/nym-scripts/nym-node-installer.sh 
 #
 
 #=============================================================================
@@ -1948,49 +1947,138 @@ check_ufw_status() {
 }
 
 ################################################################################
-# BLOCK: Web Gateway Setup (Optional)
+# BLOCK: Reverse Proxy & WSS Configuration (Optional)
 ################################################################################
 
 block_web_gateway_setup() {
-    if ! ask_continue "Web Gateway Setup (Nginx + SSL + WSS)" \
-        "Launch web gateway configuration script for reverse proxy and WebSocket Secure setup"; then
+    # Check if this block is needed for current mode
+    local NYMMODE=$(load_state "NYMMODE")
+    
+    if [[ "$NYMMODE" == "mixnode" ]]; then
+        print_header "Reverse Proxy & WSS Configuration"
+        print_info "Reverse Proxy & WSS Configuration is only needed for gateway modes (exit-gateway, entry-gateway)"
+        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
+        print_summary "Reverse Proxy & WSS Configuration skipped (not needed for mixnode)"
+        return 0
+    fi
+    
+    if !  ask_continue "Reverse Proxy & WSS Configuration (Nginx + SSL + WSS)" \
+        "Launch nym-web-gateway-setup.sh for reverse proxy and WebSocket Secure setup"; then
         return 0
     fi
     
     local web_script="nym-web-gateway-setup.sh"
-    local web_script_path=""
+    local scripts_dir="$HOME/scripts/nym-scripts"
+    local web_script_path="$scripts_dir/$web_script"
+    local download_url="https://raw. githubusercontent.com/toolfun/Scripts/main/Nym/nym-web-gateway-setup.sh"
     
-    # Try to find the script in common locations
-    if [[ -f "./$web_script" ]]; then
-        web_script_path="./$web_script"
-    elif [[ -f "$HOME/$web_script" ]]; then
-        web_script_path="$HOME/$web_script"
-    elif [[ -f "/usr/local/bin/$web_script" ]]; then
-        web_script_path="/usr/local/bin/$web_script"
-    else
-        print_warning "Web gateway setup script not found: $web_script"
-        echo -e "\n${YELLOW}Please ensure $web_script is in the same directory${NC}"
-        echo -e "${YELLOW}or provide the full path to the script.${NC}\n"
-        
-        read -r -p "Enter path to $web_script (or press ENTER to skip): " custom_path
-        
-        if [[ -n "$custom_path" ]] && [[ -f "$custom_path" ]]; then
-            web_script_path="$custom_path"
-        else
-            print_info "Web gateway setup skipped - you can run it manually later"
-            return 0
-        fi
+    # Create scripts directory if it doesn't exist
+    if [[ ! -d "$scripts_dir" ]]; then
+        print_info "Creating scripts directory: $scripts_dir"
+        mkdir -p "$scripts_dir"
     fi
     
-    print_success "Found web gateway script: $web_script_path"
+    # Main logic: try to download first, then fallback to existing
+    local script_ready=false
     
-    # Export variables that the web script might need
-    export nym_node_id="$NODE_ID"
-    export HOSTNAME="$HOSTNAME"
+    while [[ "$script_ready" == false ]]; do
+        
+        # Step 1: Try to download the latest version
+        print_step "Downloading latest version of $web_script..."
+        print_info "URL: $download_url"
+        
+        if curl --fail -L --progress-bar "$download_url" -o "$web_script_path"; then
+            chmod +x "$web_script_path"
+            print_success "Script downloaded successfully: $web_script_path"
+            script_ready=true
+        else
+            print_error "Failed to download $web_script"
+            echo ""
+            
+            # Step 2: Check if local copy exists
+            if [[ -f "$web_script_path" ]]; then
+                print_warning "Found existing local copy: $web_script_path"
+                echo ""
+                
+                if prompt_yes_no "Use existing local copy instead?" "yes"; then
+                    print_info "Using existing local copy"
+                    script_ready=true
+                else
+                    print_info "Will not use existing copy"
+                fi
+            fi
+            
+            # Step 3: If still not ready, ask user what to do
+            if [[ "$script_ready" == false ]]; then
+                echo ""
+                print_warning "Cannot proceed without $web_script"
+                echo ""
+                echo -e "${YELLOW}Options:${NC}"
+                echo -e "  ${GREEN}[R]${NC} - Retry download"
+                echo -e "  ${GREEN}[S]${NC} - Skip Reverse Proxy & WSS Configuration (not recommended)"
+                echo -e "  ${GREEN}[Q]${NC} - Quit installation"
+                echo ""
+                
+                local choice=""
+                while true; do
+                    echo -ne "${YELLOW}Your choice [R/S/Q]: ${NC}"
+                    read -r choice
+                    choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
+                    
+                    case "$choice" in
+                        r)
+                            print_info "Retrying download..."
+                            echo ""
+                            break  # Break inner loop, continue outer while loop
+                            ;;
+                        s)
+                            print_warning "Skipping Reverse Proxy & WSS Configuration"
+                            print_warning "Your node will work, but WSS and reverse proxy will NOT be configured!"
+                            print_warning "You can run $web_script manually later from: $scripts_dir"
+                            echo ""
+                            return 0
+                            ;;
+                        q)
+                            print_error "Installation aborted by user"
+                            exit 1
+                            ;;
+                        *)
+                            print_warning "Invalid choice.  Please enter R, S, or Q."
+                            ;;
+                    esac
+                done
+            fi
+        fi
+    done
     
-    echo -e "\n${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}${BOLD}  Launching Web Gateway Setup Script${NC}"
-    echo -e "${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}\n"
+    # At this point, script is ready to execute
+    
+    # Load and export variables for the child script
+    export nym_node_id=$(load_state "nym_node_id")
+    export HOSTNAME=$(load_state "HOSTNAME")
+    
+    # Verify nym_node_id is not empty
+    if [[ -z "$nym_node_id" ]]; then
+        print_error "nym_node_id is empty!  Cannot proceed with Reverse Proxy & WSS Configuration."
+        print_info "This variable should have been set in 'Environment Variables Setup' step."
+        print_info "Please restart the installation or set nym_node_id manually."
+        return 1
+    fi
+    
+    # Verify HOSTNAME is not empty (required for gateway modes)
+    if [[ -z "$HOSTNAME" ]]; then
+        print_error "HOSTNAME is empty! Cannot proceed with Reverse Proxy & WSS Configuration."
+        print_info "This variable should have been set in 'Nym Node Initialization' step."
+        print_info "Please restart the installation or set HOSTNAME manually."
+        return 1
+    fi
+    
+    print_info "Using nym_node_id: $nym_node_id"
+    print_info "Using HOSTNAME: $HOSTNAME"
+    
+    echo -e "\n${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}${BOLD}  Launching Reverse Proxy & WSS Configuration Script${NC}"
+    echo -e "${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}\n"
     
     print_info "Executing: sudo bash $web_script_path"
     echo -e "${YELLOW}Note: You will be returned here after completion${NC}\n"
@@ -1999,18 +2087,17 @@ block_web_gateway_setup() {
     
     # Execute the web gateway script
     if sudo bash "$web_script_path"; then
-        echo -e "\n${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}"
-        echo -e "${CYAN}${BOLD}  Returned from Web Gateway Setup${NC}"
-        echo -e "${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}\n"
-        print_success "Web gateway setup completed successfully"
+        echo -e "\n${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}"
+        echo -e "${CYAN}${BOLD}  Returned from Reverse Proxy & WSS Configuration${NC}"
+        echo -e "${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}\n"
+        print_success "Reverse Proxy & WSS Configuration completed successfully"
     else
-        echo -e "\n${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}"
-        echo -e "${CYAN}${BOLD}  Returned from Web Gateway Setup${NC}"
-        echo -e "${CYAN}${BOLD}════════════════════════════════════════════════════════════${NC}\n"
-        print_warning "Web gateway setup exited with errors or was skipped"
+        echo -e "\n${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}"
+        echo -e "${CYAN}${BOLD}  Returned from Reverse Proxy & WSS Configuration${NC}"
+        echo -e "${CYAN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}\n"
+        print_warning "Reverse Proxy & WSS Configuration exited with errors or was skipped"
         
-        read -r -p "Continue with node installation? [Y/n]: " continue_after_web
-        if [[ "$continue_after_web" =~ ^[Nn]$ ]]; then
+        if !  prompt_yes_no "Continue with node installation?" "yes"; then
             print_warning "Installation paused by user"
             exit 0
         fi
