@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # 
-# mkdir -p $HOME/scripts/nym-scripts URL="https://gist.githubusercontent.com/toolfun/fe137d3d983ebf26b4d603ab71553d6e/raw/nym-node-installer.sh"
-# curl --fail -L --progress-bar $URL -o ~/scripts/nym-scripts/nym-node-installer.sh
+# mkdir -p $HOME/scripts/nym-scripts
+# URLGIST="https://gist.githubusercontent.com/toolfun/fe137d3d983ebf26b4d603ab71553d6e/raw/nym-node-installer.sh"
+# URLGH="https://raw.githubusercontent.com/toolfun/Scripts/refs/heads/main/Nym/nym-node-installer.sh"
+# curl --fail -L --progress-bar $URLGH -o ~/scripts/nym-scripts/nym-node-installer.sh
 # chmod +x $HOME/scripts/nym-scripts/nym-node-installer.sh 
 #
 
