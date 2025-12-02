@@ -4,7 +4,7 @@
 # mkdir -p $HOME/scripts/nym-scripts
 # URLGIST="https://gist.githubusercontent.com/toolfun/0b7ae31463245380bb83f12360aac81e/raw/nym-web-gateway-setup.sh"	
 # URLGH="https://raw.githubusercontent.com/toolfun/Scripts/refs/heads/main/Nym/nym-web-gateway-setup.sh"
-# curl --fail -L --progress-bar $URL -o ~/scripts/nym-scripts/nym-web-gateway-setup.sh	
+# curl --fail -L --progress-bar $URLGH -o ~/scripts/nym-scripts/nym-web-gateway-setup.sh	
 # chmod +x ~/scripts/nym-scripts/nym-web-gateway-setup.sh
 #
 
