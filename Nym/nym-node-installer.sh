@@ -3232,11 +3232,11 @@ EOF
     setup_description
     configure_config_toml
     setup_network_tunnel_manager
-    setup_quic_bridge              # NEW: Added QUIC bridge here
+    setup_quic_bridge    # -------------------- # NEW: Added QUIC bridge here
     check_ufw_status
-    block_web_gateway_setup        # Adding script - Reverse Proxy, WSS, certificate
+    block_web_gateway_setup    # -------------- # Adding script - Reverse Proxy, WSS, certificate
     setup_systemd_service
-    setup_network_tunnel_manager_exit_policy
+    setup_network_tunnel_manager_exit_policy    # Same but no skipping rule
     
     # Installation blocks - Part 5
     handle_node_bonding
