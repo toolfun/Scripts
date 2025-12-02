@@ -1972,7 +1972,7 @@ block_web_gateway_setup() {
     local web_script="nym-web-gateway-setup.sh"
     local scripts_dir="$HOME/scripts/nym-scripts"
     local web_script_path="$scripts_dir/$web_script"
-    local download_url="https://raw. githubusercontent.com/toolfun/Scripts/main/Nym/nym-web-gateway-setup.sh"
+    local download_url="https://raw.githubusercontent.com/toolfun/Scripts/main/Nym/nym-web-gateway-setup.sh"
     
     # Create scripts directory if it doesn't exist
     if [[ ! -d "$scripts_dir" ]]; then
