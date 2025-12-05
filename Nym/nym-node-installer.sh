@@ -496,7 +496,7 @@ prepare_system() {
     
     print_step "Configuring dpkg and fixing broken packages..."
     sudo dpkg --configure -a
-    sudo apt update -y && sudo apt --fix-broken install -y
+    sudo apt update -y && sudo apt upgrade -y && sudo apt --fix-broken install -y
     print_success "Package system configured"
     
     print_step "Installing essential tools and dependencies..."
