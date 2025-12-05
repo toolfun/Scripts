@@ -1132,12 +1132,12 @@ EOF
 }
 
 ################################################################################
-# BLOCK 12: FINAL VERIFICATION & SERVICE RESTART
+# BLOCK 12: FINAL NGINX VERIFICATION & RESTART
 ################################################################################
 
-block_final_verification() {
-    if ! ask_continue "Final Verification & Service Restart" \
-        "Test Nginx configuration and reload services"; then
+block_nginx_final_verification() {
+    if ! ask_continue "Nginx Verification & Restart" \
+        "Test Nginx configuration and reload Nginx service"; then
         return 0
     fi
     
