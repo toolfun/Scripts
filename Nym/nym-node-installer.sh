@@ -3115,9 +3115,9 @@ show_final_summary() {
     
     # Required ports reminder
     if [ "$NYMMODE" = "exit-gateway" ] || [ "$NYMMODE" = "entry-gateway" ]; then
-        echo -e "  ${BLUE}ℹ${NC}  Required ports: ${CYAN}80, 443, 1789, 1790, 8080, 9000, 9001, 51822, 51830/udp${NC}"
+        echo -e "  ${BLUE}ℹ${NC}  Required ports: ${CYAN}80, 443, 1789, 1790, 8080, 9000, 9001, 51830, 51822/udp, 4443/udp${NC}"
     else
-        echo -e "  ${BLUE}ℹ${NC}  Required ports: ${CYAN}80, 443, 1789, 1790, 8080, 9000, 9001, 51822/udp${NC}"
+        echo -e "  ${BLUE}ℹ${NC}  Required ports: ${CYAN}80, 443, 1789, 1790, 8080, 9000, 9001${NC}"
     fi
     
     # Network explorer
