@@ -1644,185 +1644,6 @@ configure_config_toml() {
 }
 
 #-----------------------------------------------------------------------------
-# BLOCK: Network Tunnel Manager
-#-----------------------------------------------------------------------------
-setup_network_tunnel_manager() {
-    if is_step_completed "network_tunnel"; then
-        print_info "Network tunnel manager already configured. Skipping..."
-        return 0
-    fi
-    
-    print_header "Network Tunnel Manager Setup"
-
-    local NYMMODE=$(load_state "NYMMODE")
-    
-    if [ "$NYMMODE" = "mixnode" ]; then
-        print_info "Network tunnel manager is only needed for gateway modes"
-        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
-        mark_step_completed "network_tunnel"
-        print_summary "Network tunnel manager skipped (not needed for mixnode)"
-        return 0
-    fi
-
-    print_info "Next: Configure network tunneling and WireGuard exit policy"
-    echo ""
-    echo -e "${YELLOW}Options:${NC}"
-    echo -e "  ${GREEN}[Enter]${NC} - Execute block"
-    echo -e "  ${GREEN}[S]${NC}     - Skip"
-    echo ""
-    
-    local choice=""
-    while true; do
-        echo -ne "${YELLOW}Your choice [Enter/S]: ${NC}"
-        read -r choice
-        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
-        
-        if [ -z "$choice" ]; then
-            break  # Execute the block
-        elif [ "$choice" = "s" ]; then
-            print_warning "Skipping this block"
-            save_state "skipped_network_tunnel" "yes"
-            mark_step_completed "network_tunnel"
-            return 0
-        else
-            print_warning "Invalid choice. Press 'S' to skip or Enter to execute."
-        fi
-    done
-    
-    cd "$HOME" || {
-        print_error "Failed to change to home directory"
-        return 1
-    }
-    
-    print_step "Downloading network tunnel manager script..."
-    
-    # Force overwrite using curl -o
-    if ! curl -L -o network-tunnel-manager.sh https://raw.githubusercontent.com/nymtech/nym/refs/heads/develop/scripts/nym-node-setup/network-tunnel-manager.sh; then
-        print_error "Failed to download network tunnel manager script"
-        return 1
-    fi
-    
-    chmod +x network-tunnel-manager.sh
-    print_success "Network tunnel manager script downloaded"
-    
-    echo ""
-    print_step "Running network tunnel configuration commands..."
-    print_warning "This will modify system network settings"
-    echo ""
-    
-    local commands=(
-        "complete_networking_configuration:Full tunneling and exit policy setup"
-    )
-    
-    for cmd_info in "${commands[@]}"; do
-        IFS=':' read -r cmd desc <<< "$cmd_info"
-        
-        echo -e "${MAGENTA}▶ $desc...${NC}"
-        
-        if ./network-tunnel-manager.sh $cmd; then
-            echo -e "  ${GREEN}✅ Success${NC}"
-        else
-            print_warning "Command might have failed: $cmd"
-            print_info "Continuing anyway..."
-        fi
-    done
-    
-    print_success "Network tunnel manager configuration completed"
-    
-    mark_step_completed "network_tunnel"
-    print_summary "Network tunneling and WireGuard exit policy configured"
-}
-
-#-----------------------------------------------------------------------------
-# BLOCK: QUIC Transport Bridge Deployment
-#-----------------------------------------------------------------------------
-setup_quic_bridge() {
-    if is_step_completed "quic_bridge"; then
-        print_info "QUIC transport bridge already configured. Skipping..."
-        return 0
-    fi
-    
-    print_header "QUIC Transport Bridge Deployment"
-    
-    print_info "Next: Brief description of what this block does"
-    echo ""
-    echo -e "${YELLOW}Options:${NC}"
-    echo -e "  ${GREEN}[Enter]${NC} - Execute block"
-    echo -e "  ${GREEN}[S]${NC}     - Skip"
-    echo ""
-    
-    local choice=""
-    while true; do
-        echo -ne "${YELLOW}Your choice [Enter/S]: ${NC}"
-        read -r choice
-        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
-        
-        if [ -z "$choice" ]; then
-            break  # Execute the block
-        elif [ "$choice" = "s" ]; then
-            print_warning "Skipping this block"
-            save_state "skipped_quic_bridge" "yes"
-            mark_step_completed "quic_bridge"
-            return 0
-        else
-            print_warning "Invalid choice. Press 'S' to skip or Enter to execute."
-        fi
-    done
-
-    local NYMMODE=$(load_state "NYMMODE")
-    
-    if [ "$NYMMODE" = "mixnode" ]; then
-        print_info "QUIC bridge is only needed for gateway modes"
-        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
-        mark_step_completed "quic_bridge"
-        print_summary "QUIC bridge skipped (not needed for mixnode)"
-        return 0
-    fi
-    
-    print_info "Next: Deploy QUIC transport bridge (interactive setup)"
-    print_warning "This script will ask you to confirm each step"
-    echo ""
-    print_info "Press ${GREEN}Enter${NC} to continue..."
-    read -r
-    
-    cd "$HOME" || {
-        print_error "Failed to change to home directory"
-        return 1
-    }
-    
-    print_step "Downloading QUIC bridge deployment script..."
-    
-    # Force overwrite using curl -o
-    if ! curl -L -o quic_bridge_deployment.sh https://raw.githubusercontent.com/nymtech/nym/refs/heads/develop/scripts/nym-node-setup/quic_bridge_deployment.sh; then
-        print_error "Failed to download QUIC bridge deployment script"
-        return 1
-    fi
-    
-    chmod +x quic_bridge_deployment.sh
-    print_success "QUIC bridge deployment script downloaded"
-    
-    echo ""
-    print_step "Starting QUIC bridge setup (interactive)..."
-    print_info "The script will ask you to confirm each step"
-    echo ""
-    
-    # Pass control to the QUIC bridge script
-    if ./quic_bridge_deployment.sh full_bridge_setup; then
-        print_success "QUIC bridge deployment completed successfully"
-    else
-        print_warning "QUIC bridge deployment encountered issues"
-        print_info "Check the output above for details"
-        
-        if ! prompt_yes_no "Continue with installation despite QUIC bridge issues?" "yes"; then
-            return 1
-        fi
-    fi
-    
-    mark_step_completed "quic_bridge"
-    print_summary "QUIC transport bridge configured"
-}
-
-#-----------------------------------------------------------------------------
 # BLOCK: UFW Status Check
 #-----------------------------------------------------------------------------
 check_ufw_status() {
@@ -2310,91 +2131,6 @@ fi
 }
 
 #-----------------------------------------------------------------------------
-# BLOCK: Network Tunnel Manager - Wireguard Exit Policy
-#-----------------------------------------------------------------------------
-setup_network_tunnel_manager_exit_policy() {
-    print_header "Network Tunnel Manager Setup"
-
-    local NYMMODE=$(load_state "NYMMODE")
-    
-    if [ "$NYMMODE" = "mixnode" ]; then
-        print_info "Network tunnel manager is only needed for gateway modes"
-        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
-        mark_step_completed "network_tunnel"
-        print_summary "Network tunnel manager skipped (not needed for mixnode)"
-        return 0
-    fi
-
-    print_info "Next: Configure network tunneling and WireGuard exit policy"
-    echo ""
-    echo -e "${YELLOW}Options:${NC}"
-    echo -e "  ${GREEN}[Enter]${NC} - Execute block"
-    echo -e "  ${GREEN}[S]${NC}     - Skip"
-    echo ""
-    
-    local choice=""
-    while true; do
-        echo -ne "${YELLOW}Your choice [Enter/S]: ${NC}"
-        read -r choice
-        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
-        
-        if [ -z "$choice" ]; then
-            break  # Execute the block
-        elif [ "$choice" = "s" ]; then
-            print_warning "Skipping this block"
-            save_state "skipped_network_tunnel" "yes"
-            mark_step_completed "network_tunnel"
-            return 0
-        else
-            print_warning "Invalid choice. Press 'S' to skip or Enter to execute."
-        fi
-    done
-    
-    cd "$HOME" || {
-        print_error "Failed to change to home directory"
-        return 1
-    }
-    
-    print_step "Downloading network tunnel manager script..."
-    
-    # Force overwrite using curl -o
-    if ! curl -L -o network-tunnel-manager.sh https://raw.githubusercontent.com/nymtech/nym/refs/heads/develop/scripts/nym-node-setup/network-tunnel-manager.sh; then
-        print_error "Failed to download network tunnel manager script"
-        return 1
-    fi
-    
-    chmod +x network-tunnel-manager.sh
-    print_success "Network tunnel manager script downloaded"
-    
-    echo ""
-    print_step "Running network tunnel configuration commands..."
-    print_warning "This will modify system network settings"
-    echo ""
-    
-    local commands=(
-        "complete_networking_configuration:Full tunneling and exit policy setup"
-    )
-    
-    for cmd_info in "${commands[@]}"; do
-        IFS=':' read -r cmd desc <<< "$cmd_info"
-        
-        echo -e "${MAGENTA}▶ $desc...${NC}"
-        
-        if ./network-tunnel-manager.sh $cmd; then
-            echo -e "  ${GREEN}✅ Success${NC}"
-        else
-            print_warning "Command might have failed: $cmd"
-            print_info "Continuing anyway..."
-        fi
-    done
-    
-    print_success "Network tunnel manager configuration completed"
-    
-    mark_step_completed "network_tunnel"
-    print_summary "Network tunneling and WireGuard exit policy configured"
-}
-
-#-----------------------------------------------------------------------------
 # BLOCK: Node Bonding (Optional)
 #-----------------------------------------------------------------------------
 handle_node_bonding() {
@@ -2520,6 +2256,185 @@ handle_node_bonding() {
     
     mark_step_completed "bonding"
     print_summary "Node bonding process completed"
+}
+
+#-----------------------------------------------------------------------------
+# BLOCK: Network Tunnel Manager
+#-----------------------------------------------------------------------------
+setup_network_tunnel_manager() {
+    if is_step_completed "network_tunnel"; then
+        print_info "Network tunnel manager already configured. Skipping..."
+        return 0
+    fi
+    
+    print_header "Network Tunnel Manager Setup"
+
+    local NYMMODE=$(load_state "NYMMODE")
+    
+    if [ "$NYMMODE" = "mixnode" ]; then
+        print_info "Network tunnel manager is only needed for gateway modes"
+        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
+        mark_step_completed "network_tunnel"
+        print_summary "Network tunnel manager skipped (not needed for mixnode)"
+        return 0
+    fi
+
+    print_info "Next: Configure network tunneling and WireGuard exit policy"
+    echo ""
+    echo -e "${YELLOW}Options:${NC}"
+    echo -e "  ${GREEN}[Enter]${NC} - Execute block"
+    echo -e "  ${GREEN}[S]${NC}     - Skip"
+    echo ""
+    
+    local choice=""
+    while true; do
+        echo -ne "${YELLOW}Your choice [Enter/S]: ${NC}"
+        read -r choice
+        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
+        
+        if [ -z "$choice" ]; then
+            break  # Execute the block
+        elif [ "$choice" = "s" ]; then
+            print_warning "Skipping this block"
+            save_state "skipped_network_tunnel" "yes"
+            mark_step_completed "network_tunnel"
+            return 0
+        else
+            print_warning "Invalid choice. Press 'S' to skip or Enter to execute."
+        fi
+    done
+    
+    cd "$HOME" || {
+        print_error "Failed to change to home directory"
+        return 1
+    }
+    
+    print_step "Downloading network tunnel manager script..."
+    
+    # Force overwrite using curl -o
+    if ! curl -L -o network-tunnel-manager.sh https://raw.githubusercontent.com/nymtech/nym/refs/heads/develop/scripts/nym-node-setup/network-tunnel-manager.sh; then
+        print_error "Failed to download network tunnel manager script"
+        return 1
+    fi
+    
+    chmod +x network-tunnel-manager.sh
+    print_success "Network tunnel manager script downloaded"
+    
+    echo ""
+    print_step "Running network tunnel configuration commands..."
+    print_warning "This will modify system network settings"
+    echo ""
+    
+    local commands=(
+        "complete_networking_configuration:Full tunneling and exit policy setup"
+    )
+    
+    for cmd_info in "${commands[@]}"; do
+        IFS=':' read -r cmd desc <<< "$cmd_info"
+        
+        echo -e "${MAGENTA}▶ $desc...${NC}"
+        
+        if ./network-tunnel-manager.sh $cmd; then
+            echo -e "  ${GREEN}✅ Success${NC}"
+        else
+            print_warning "Command might have failed: $cmd"
+            print_info "Continuing anyway..."
+        fi
+    done
+    
+    print_success "Network tunnel manager configuration completed"
+    
+    mark_step_completed "network_tunnel"
+    print_summary "Network tunneling and WireGuard exit policy configured"
+}
+
+#-----------------------------------------------------------------------------
+# BLOCK: QUIC Transport Bridge Deployment
+#-----------------------------------------------------------------------------
+setup_quic_bridge() {
+    if is_step_completed "quic_bridge"; then
+        print_info "QUIC transport bridge already configured. Skipping..."
+        return 0
+    fi
+    
+    print_header "QUIC Transport Bridge Deployment"
+    
+    print_info "Next: Brief description of what this block does"
+    echo ""
+    echo -e "${YELLOW}Options:${NC}"
+    echo -e "  ${GREEN}[Enter]${NC} - Execute block"
+    echo -e "  ${GREEN}[S]${NC}     - Skip"
+    echo ""
+    
+    local choice=""
+    while true; do
+        echo -ne "${YELLOW}Your choice [Enter/S]: ${NC}"
+        read -r choice
+        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]' | xargs)
+        
+        if [ -z "$choice" ]; then
+            break  # Execute the block
+        elif [ "$choice" = "s" ]; then
+            print_warning "Skipping this block"
+            save_state "skipped_quic_bridge" "yes"
+            mark_step_completed "quic_bridge"
+            return 0
+        else
+            print_warning "Invalid choice. Press 'S' to skip or Enter to execute."
+        fi
+    done
+
+    local NYMMODE=$(load_state "NYMMODE")
+    
+    if [ "$NYMMODE" = "mixnode" ]; then
+        print_info "QUIC bridge is only needed for gateway modes"
+        print_info "Current mode: ${YELLOW}$NYMMODE${NC} - Skipping..."
+        mark_step_completed "quic_bridge"
+        print_summary "QUIC bridge skipped (not needed for mixnode)"
+        return 0
+    fi
+    
+    print_info "Next: Deploy QUIC transport bridge (interactive setup)"
+    print_warning "This script will ask you to confirm each step"
+    echo ""
+    print_info "Press ${GREEN}Enter${NC} to continue..."
+    read -r
+    
+    cd "$HOME" || {
+        print_error "Failed to change to home directory"
+        return 1
+    }
+    
+    print_step "Downloading QUIC bridge deployment script..."
+    
+    # Force overwrite using curl -o
+    if ! curl -L -o quic_bridge_deployment.sh https://raw.githubusercontent.com/nymtech/nym/refs/heads/develop/scripts/nym-node-setup/quic_bridge_deployment.sh; then
+        print_error "Failed to download QUIC bridge deployment script"
+        return 1
+    fi
+    
+    chmod +x quic_bridge_deployment.sh
+    print_success "QUIC bridge deployment script downloaded"
+    
+    echo ""
+    print_step "Starting QUIC bridge setup (interactive)..."
+    print_info "The script will ask you to confirm each step"
+    echo ""
+    
+    # Pass control to the QUIC bridge script
+    if ./quic_bridge_deployment.sh full_bridge_setup; then
+        print_success "QUIC bridge deployment completed successfully"
+    else
+        print_warning "QUIC bridge deployment encountered issues"
+        print_info "Check the output above for details"
+        
+        if ! prompt_yes_no "Continue with installation despite QUIC bridge issues?" "yes"; then
+            return 1
+        fi
+    fi
+    
+    mark_step_completed "quic_bridge"
+    print_summary "QUIC transport bridge configured"
 }
 
 #-----------------------------------------------------------------------------
@@ -3231,15 +3146,14 @@ EOF
     # Installation blocks - Part 4
     setup_description
     configure_config_toml
-    setup_network_tunnel_manager
-    setup_quic_bridge    # -------------------- # NEW: Added QUIC bridge here
     check_ufw_status
     block_web_gateway_setup    # -------------- # Adding script - Reverse Proxy, WSS, certificate
     setup_systemd_service
-    setup_network_tunnel_manager_exit_policy    # Same but no skipping rule
     
     # Installation blocks - Part 5
     handle_node_bonding
+    setup_network_tunnel_manager
+    setup_quic_bridge
     run_network_tests
     verify_bash_profile
     show_final_summary
