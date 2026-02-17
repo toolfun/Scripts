@@ -12,8 +12,8 @@
 # Nym Node - Reverse Proxy & WSS Configuration Script
 # For Ubuntu 22.04/24.04
 # Author: toolfun
-# Version: 2.0.1
-# Date: 2025-11-30
+# Version: 2.0.2
+# Date: 2026-02-17
 ################################################################################
 
 set +e  # Don't exit on errors - we handle them manually
