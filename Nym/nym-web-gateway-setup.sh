@@ -1309,7 +1309,7 @@ main() {
     cat << "EOF"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║     Nym Node - Reverse Proxy & WSS Configuration Script      ║
+║     Nym Node - Reverse Proxy & WSS Configuration Script       ║
 ║                                                               ║
 ║                    Ubuntu 22.04 / 24.04                       ║
 ║                                                               ║
