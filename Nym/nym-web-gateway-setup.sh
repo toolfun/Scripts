@@ -658,6 +658,10 @@ block_ufw_configuration() {
         print_success "Port 9001/tcp (WSS port) allowed" || \
         print_info "Port 9001/tcp rule may already exist"
     
+    ufw allow 41264/tcp comment "Lewes Protocol (41264 tcp)" >> "$LOG_FILE" 2>&1 && \
+        print_success "Port 41264/tcp (Lewes Protocol) allowed" || \
+        print_info "Port 41264/tcp rule may already exist"
+    
     # Add UDP ports with comments
     print_info "Adding UDP port rules..."
     
@@ -668,6 +672,10 @@ block_ufw_configuration() {
     ufw allow 4443/udp comment "nym-bridge QUIC transport" >> "$LOG_FILE" 2>&1 && \
         print_success "Port 4443/udp (nym-bridge QUIC) allowed" || \
         print_info "Port 4443/udp rule may already exist"
+
+    ufw allow 51264/udp comment "Lewes Protocol (51264 udp)" >> "$LOG_FILE" 2>&1 && \
+        print_success "Port 51264/udp (Lewes Protocol) allowed" || \
+        print_info "Port 51264/udp rule may already exist"
     
     # Add WireGuard interface rule (will succeed even if interface doesn't exist yet)
     print_info "Adding WireGuard interface bandwidth rule..."
