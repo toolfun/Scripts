@@ -1755,6 +1755,10 @@ check_ufw_status() {
             echo -e "  sudo ufw allow 51822/udp"
             echo -e "  ${YELLOW}# Allow QUIC transport (for gateways)${NC}"
             echo -e "  sudo ufw allow 4443/udp"
+            echo -e "  ${YELLOW}# Allow Lewes Protocol (for gateways)${NC}"
+            echo -e "  sudo ufw allow 41264/tcp"
+            echo -e "  ${YELLOW}# Allow Lewes Protocol - UDP (for gateways)${NC}"
+            echo -e "  sudo ufw allow 51264/udp"
         fi
         
         echo ""
