@@ -742,7 +742,7 @@ setup_environment_variables() {
         print_info "Setting up NYM node configuration..."
         
         local nym_node_id=""
-        prompt_user "Enter your Nym node ID: " nym_node_id "required"
+        prompt_user "Enter your Nym node ID (name): " nym_node_id "required"
         
         sed -i '/^# NYM$/,/^export nym_node_id=/d' "$bash_profile"
         
