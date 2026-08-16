@@ -401,7 +401,7 @@ check_ubuntu_version() {
     fi
     
     local version="${VERSION_ID%%.*}"
-    if [ "$version" != "22" ] && [ "$version" != "24" ]; then
+    if [ "$version" != "22" ] && [ "$version" != "24" ] && [ "$version" != "26" ]; then
         print_warning "This script is tested on Ubuntu 22 and 24 LTS. Your version: $VERSION_ID"
         if ! prompt_yes_no "Continue anyway?" "no"; then
             exit 1
