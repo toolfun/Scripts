@@ -328,7 +328,7 @@ block_preliminary_checks() {
         source /etc/os-release
         print_info "Detected OS: $PRETTY_NAME"
         if [[ "$ID" == "ubuntu" ]]; then
-            if [[ "$VERSION_ID" == "22.04" || "$VERSION_ID" == "24.04" ]]; then
+            if [[ "$VERSION_ID" == "22.04" || "$VERSION_ID" == "24.04" || "$VERSION_ID" == "26.04" ]]; then
                 print_success "Ubuntu version supported"
             else
                 print_warning "Ubuntu version $VERSION_ID is not 22.04 or 24.04. Continuing anyway..."
